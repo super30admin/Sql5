@@ -1,0 +1,26 @@
+# Write your MySQL query statement below
+WITH states AS (
+    SELECT fail_date as day, "failed" as state FROM Failed
+        UNION ALL
+    SELECT success_date as day, "succeeded" as state FROM Succeeded),
+states_with_row AS (
+    SELECT
+        ROW_NUMBER() OVER(PARTITION BY state ORDER BY day) AS rid,
+        day,
+        state
+    FROM
+        states
+)
+SELECT 
+    state as "period_state",
+    MIN(day) as "start_date",
+    MAX(day) as "end_date"
+FROM
+    states_with_row
+WHERE
+    day between "2019-01-01" AND "2019-12-31"
+GROUP BY
+    state,
+    DATE_SUB(day, INTERVAL rid DAY)
+ORDER BY
+    start_date
