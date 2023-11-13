@@ -1,0 +1,5 @@
+select p.player_id, p.event_date as first_login
+from
+(select player_id, row_number() over (partition by player_id order by event_date) as id, event_date
+from Activity) p
+where p.id=1
