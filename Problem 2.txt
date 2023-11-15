@@ -1,0 +1,8 @@
+with one as (select *,row_number() over(partition by continent order by name) as rw
+from Student)
+
+select min(America) as America, min(Asia) as Asia, min(Europe) as Europe from (select o.rw,
+case when o.continent = 'America' then o.name else null end as America,
+case when o.continent = 'Asia' then o.name else null end as Asia,
+case when o.continent = 'Europe' then o.name else null end as Europe
+from one as o) two group by two.rw
