@@ -1,0 +1,32 @@
+# Report Contiguous Dates
+
+WITH t1 AS(
+SELECT MIN(success_date) AS start_date, MAX(success_date) AS end_date, state
+FROM(
+SELECT *, date_sub(success_date, interval ROW_NUMBER() OVER(ORDER BY success_date) day) AS diff, 1 AS state
+FROM succeeded
+WHERE success_date BETWEEN "2019-01-01" AND "2019-12-31") a
+GROUP BY diff),
+
+t2 AS(
+SELECT MIN(fail_date) AS start_date, MAX(fail_date) AS end_date, state
+FROM(
+SELECT *, date_sub(fail_date, interval ROW_NUMBER() OVER(ORDER BY fail_date) day) AS diff, 0 AS state
+FROM failed
+WHERE fail_date BETWEEN "2019-01-01" AND "2019-12-31") b
+GROUP BY diff)
+
+
+SELECT
+CASE WHEN c.state = 1 THEN "succeeded"
+ELSE "failed"
+END AS period_state,start_date, end_date
+FROM(
+SELECT *
+FROM t1
+
+UNION ALL
+
+SELECT *
+FROM t2) c
+ORDER BY start_date
