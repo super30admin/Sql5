@@ -1,0 +1,16 @@
+# Students Report by Geography
+
+
+with cte as (
+  select name
+        , continent
+        , row_number() over (partition by continent order by name) rn
+    from Student
+)
+select s1.name as America
+      , s2.name as Asia
+      , s3.name as Europe
+  from cte s1
+  left join cte s2 on s2.continent = 'Asia' and s1.rn = s2.rn
+  left join cte s3 on s3.continent = 'Europe' and s1.rn = s3.rn
+ where s1.continent = 'America'
