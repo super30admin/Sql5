@@ -26,3 +26,8 @@ europes as(
     (select @eu:=@eu+1 AS row_id, name as Europe FROM student where continent ='Europe' ORDER BY Europe) AS t3
     )
 select America, Asia, Europe FROM asias RIGHT JOIN americas on asias.row_id=americas.row_id LEFT JOIN europes ON americas.row_id = europes.row_id
+
+
+q21 - Game Play Analysis I
+
+select player_id, min(event_date) as first_login from Activity group by player_id order by event_date
