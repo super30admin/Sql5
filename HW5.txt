@@ -1,0 +1,33 @@
+ 
+ Q18- Report Contiguous Dates
+ with cte as (
+select a.*,row_number() over(order by d)  - ROW_NUMBER() OVER (PARTITION BY status ORDER BY d) AS grp 
+from(
+select fail_date as d, 'failed' as status from failed
+union
+select success_date as d ,'succeeded' as status from Succeeded) a
+where d between '2019-01-01' and '2019-12-31')
+
+select status as period_state ,min(d) as start_date,  max(d) as end_date from cte
+group by 1, grp
+order by 2
+
+Q19- Students Report By Geography
+
+WITH americas as(
+    select row_id, America FROM (select@am:=0)t,
+    (select @am:=@am+1 AS row_id, name as America FROM student where continent ='America' ORDER BY America) AS t1),
+    asias as(
+        select row_id, Asia FROM (select @as:=0)t,
+    (select @as:=@as+1 AS row_id, name as Asia FROM student where continent ='Asia' ORDER BY Asia) AS t2),
+
+europes as(
+        select row_id, Europe FROM (select @eu:=0)t,
+    (select @eu:=@eu+1 AS row_id, name as Europe FROM student where continent ='Europe' ORDER BY Europe) AS t3
+    )
+select America, Asia, Europe FROM asias RIGHT JOIN americas on asias.row_id=americas.row_id LEFT JOIN europes ON americas.row_id = europes.row_id
+
+
+q21 - Game Play Analysis I
+
+select player_id, min(event_date) as first_login from Activity group by player_id order by event_date
