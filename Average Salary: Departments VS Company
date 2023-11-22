@@ -1,0 +1,11 @@
+Select avg_dept_salary.pay_month, department_id,
+case
+when department_avg_salary > company_avg_salary then 'higher'
+when department_avg_salary < company_avg_salary then 'lower'
+else 'same'
+end as comparison
+from (Select department_id, avg(amount) as department_avg_salary, date_format(pay_date, '%Y-%m') as pay_month from salary 
+join Employee on salary.employee_id = employee.employee_id group by department_id, pay_month) as avg_dept_salary
+
+join (Select avg(amount) as company_avg_salary, date_format(pay_date, '%Y-%m') as pay_month from salary 
+group by date_format(pay_date, '%Y-%m')) as avg_company_salary on avg_dept_salary.pay_month = avg_company_salary.pay_month;
