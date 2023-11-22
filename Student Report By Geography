@@ -1,0 +1,24 @@
+# Write your MySQL query statement below
+WITH americas AS (
+    SELECT @am := @am + 1 AS row_id, name AS America 
+    FROM Student, (SELECT @am := 0) t 
+    WHERE continent = 'America' 
+    ORDER BY America
+),
+asias AS (
+    SELECT @as := @as + 1 AS row_id, name AS Asia 
+    FROM Student, (SELECT @as := 0) t 
+    WHERE continent = 'Asia' 
+    ORDER BY Asia
+),
+europes AS (
+    SELECT @eu := @eu + 1 AS row_id, name AS Europe 
+    FROM Student, (SELECT @eu := 0) t 
+    WHERE continent = 'Europe' 
+    ORDER BY Europe
+)
+
+SELECT America, Asia, Europe 
+FROM asias 
+RIGHT JOIN americas ON asias.row_id = americas.row_id 
+LEFT JOIN europes ON americas.row_id = europes.row_id;
