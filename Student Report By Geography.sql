@@ -1,17 +1,24 @@
-with id_table as(select *, row_number() over(partition by continent order by name) as id
-from Student),
-cte1 as(select * 
-from id_table
-where continent = 'America'),
-cte2 as (select * 
-from id_table
-where continent = 'Europe'),
-cte3 as(select * 
-from id_table
-where continent = 'Asia')
+WITH cte AS (
+  SELECT *, ROW_NUMBER() OVER(PARTITION BY continent ORDER BY name) AS row_no
+  FROM Student
+),
+cte1 AS (
+  SELECT name AS America, row_no
+  FROM cte
+  WHERE continent = 'America'
+),
+cte2 AS (
+  SELECT name AS Europe, row_no
+  FROM cte
+  WHERE continent = 'Europe'
+),
+cte3 AS (
+  SELECT name AS Asia, row_no
+  FROM cte
+  WHERE continent = 'Asia'
+)
 
-select cte1.name as America, cte3.name as Asia, cte2.name as Europe
-from cte1
-left join cte2 on cte1.id = cte2.id
-left join cte3 on cte1.id = cte3.id
-
+SELECT cte1.America, cte3.Asia, cte2.Europe
+FROM cte1
+LEFT JOIN cte3 ON cte1.row_no = cte3.row_no
+LEFT JOIN cte2 ON cte1.row_no = cte2.row_no;
