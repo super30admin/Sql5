@@ -1,0 +1,21 @@
+-- Method 1
+SELECT  player_id,
+        MIN(event_date) first_login
+FROM activity
+GROUP BY 1;
+
+-- Method 2
+SELECT  DISTINCT player_id,
+        FIRST_VALUE(event_date) OVER(PARTITION BY player_id ORDER BY event_date RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) first_login
+FROM activity;
+
+-- Method 3
+SELECT  player_id,
+        event_date AS first_login
+FROM (
+    SELECT  player_id,
+            event_date,
+            DENSE_RANK() OVER(PARTITION BY player_id ORDER BY event_date) rnk
+    FROM activity
+)a
+WHERE rnk = 1
