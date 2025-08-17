@@ -1,0 +1,10 @@
+with one as (select 'failed' as period_state, fail_date as date, rank() over(order by fail_date)as rnk from Failed where fail_date >= '2019-01-01' and fail_date <= '2019-12-31' 
+union all 
+select 'succeeded' as period_state, success_date as date, rank() over(order by success_date)as rnk from Succeeded where success_date >= '2019-01-01' and success_date <= '2019-12-31'
+order by date)
+
+
+Select t.period_state, min(t.date) as start_date, max(t.date) as end_date
+from (Select *, (rank()over(order by date) - o.rnk) as intvl from one o)t
+group by intvl, period_state
+order by start_date

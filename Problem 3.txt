@@ -1,0 +1,10 @@
+with cte as (Select DATE_FORMAT(s.pay_date, '%Y-%m') as pay_month, e.department_id, avg(amount)over(partition by pay_date, department_id) as dm_avg, avg(amount)over(partition by pay_date) as m_avg from salary s
+inner join Employee e on s.employee_id = e.employee_id)
+
+select distinct(cte.pay_month), cte.department_id, 
+case when cte.dm_avg>cte.m_avg then 'higher' 
+      when cte.dm_avg<cte.m_avg then 'lower' 
+      else 'same' 
+      end as comparison
+from cte 
+
