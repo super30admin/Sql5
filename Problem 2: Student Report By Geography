@@ -1,0 +1,21 @@
+# Write your MySQL query statement below
+#Using Window Function
+WITH AmericaCTE AS(
+    SELECT name AS 'America', ROW_NUMBER() OVER(ORDER BY name) AS 'rnk' FROM Student WHERE continent = 'America'
+),
+AsiaCTE AS(
+    SELECT name AS 'Asia', ROW_NUMBER() OVER(ORDER BY name) AS 'rnk' FROM Student WHERE continent = 'Asia'
+),
+EuropeCTE AS(
+    SELECT name AS 'Europe', ROW_NUMBER() OVER(ORDER BY name) AS 'rnk' FROM Student WHERE continent = 'Europe'
+)
+SELECT America, Asia, Europe FROM AsiaCTE RIGHT JOIN AmericaCTE ON AmericaCTE.rnk = AsiaCTE.rnk LEFT JOIN EuropeCTE ON AmericaCTE.rnk = EuropeCTE.rnk;
+
+
+
+#Using Session Variable
+SELECT America, Asia, Europe FROM(
+    (SELECT @am :=0, @as :=0, @eu :=0)t1, (SELECT @as := @as+1 AS 'asrnk', name AS 'Asia' FROM Student WHERE continent = 'Asia' ORDER BY name)t2 RIGHT JOIN(
+      SELECT @am := @am+1 AS 'amrnk', name AS 'America' FROM Student WHERE continent = 'America' ORDER BY name)t3 ON asrnk = amrnk LEFT JOIN(
+       SELECT @eu := @eu+1 AS 'eurnk', name AS 'Europe' FROM Student WHERE continent = 'Europe' ORDER BY name)t4 ON amrnk = eurnk
+);

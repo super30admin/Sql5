@@ -1,0 +1,23 @@
+# Write your MySQL query statement below
+SELECT player_id, MIN(event_date) AS 'first_login' FROM Activity GROUP BY player_id;
+
+#Using Partition By
+SELECT DISTINCT player_id, MIN(event_date) OVER(PARTITION BY player_id) AS 'first_login' FROM Activity
+
+#Using Window Functions
+# RANK
+SELECT a.player_id, a.event_date AS 'first_login' FROM(
+    SELECT b.player_id, b.event_date, RANK()OVER(PARTITION BY b.player_id ORDER BY b.event_date) AS 'rnk' FROM Activity b) a
+    WHERE a.rnk = 1
+# DENSE_RANK
+SELECT a.player_id, a.event_date AS 'first_login' FROM(
+    SELECT b.player_id, b.event_date, DENSE_RANK()OVER(PARTITION BY b.player_id ORDER BY b.event_date) AS 'rnk' FROM Activity b) a
+    WHERE a.rnk = 1
+# ROW_NUMBER
+SELECT a.player_id, a.event_date AS 'first_login' FROM(
+    SELECT b.player_id, b.event_date, ROW_NUMBER()OVER(PARTITION BY b.player_id ORDER BY b.event_date) AS 'rnk' FROM Activity b) a
+    WHERE a.rnk = 1
+# FIRST_VALUE
+SELECT DISTINCT a.player_id, FIRST_VALUE(a.event_date) OVER(PARTITION BY a.player_id ORDER BY a.event_date) AS 'first_login' FROM Activity a;
+#LAST_VALUE
+SELECT DISTINCT a.player_id, LAST_VALUE(a.event_date) OVER(PARTITION BY a.player_id ORDER BY a.event_date DESC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS 'first_login' FROM Activity a;
