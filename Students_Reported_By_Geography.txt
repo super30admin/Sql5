@@ -1,0 +1,5 @@
+select America, Asia, Europe from(
+(SELECT @am := 1 , @as := 1, @eu := 1)t1,
+(SELEcT @as := @as + 1 as asrnk, name as 'Asia' from Student where continent = 'Asia' order by name)t2 right join
+(SELECT @am := @am + 1 as amrnk, name as 'America' from Student where continent = 'America' order by name)t3 on t2.asrnk = t3.amrnk left join
+(SELECT @eu := @eu + 1 as eurnk, name as 'Europe' from Student where continent = 'Europe' order by name)t4 on t3.amrnk = t4.eurnk)
