@@ -1,0 +1,25 @@
+# Write your MySQL query statement below
+
+with joined_table as (
+    select fail_date as date_val, 'failed' as day_state from
+Failed f
+where fail_date between date('2019-01-01') and date('2019-12-31')
+union all
+select success_date as date_val, 'succeeded' as day_state from
+Succeeded s
+where success_date between date('2019-01-01') and date('2019-12-31')
+),
+
+ cte_diffs as (
+select date_val, day_state,
+#row_number() over (order by date_val asc) as date_partition,
+#dense_rank() over (partition by day_state order by date_val asc) as state_val,
+(dense_rank() over (order by date_val asc) - dense_rank() over (partition by day_state order by date_val asc)) as diffs
+from joined_table
+
+order by date_val asc)
+select day_state as period_state, min(date_val) as start_date, max(date_val) as end_date
+from cte_diffs
+group by period_state,diffs
+order by 2
+

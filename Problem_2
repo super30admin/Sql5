@@ -1,0 +1,28 @@
+# Write your MySQL query statement below
+with america as (
+    select row_number() over () as id,
+    case when continent = 'America' then name end as America
+    from student
+    where case when continent = 'America' then name end is not null
+    order by 2 asc
+),
+asia as (
+    select row_number() over () as id,
+    case when continent = 'Asia' then name end as Asia
+    from student
+    where case when continent = 'Asia' then name end is not null
+    order by 2 asc
+),
+europe as (
+    select row_number() over () as id,
+    case when continent = 'Europe' then name end as Europe
+    from student
+    where case when continent = 'Europe' then name end is not null
+    order by 2 asc
+)
+select america,
+       asia,
+       europe
+from america a
+left join asia s on a.id = s.id
+left join europe e on a.id = e.id

@@ -1,0 +1,10 @@
+# Write your MySQL query statement below
+select
+distinct date_format(pay_date, '%Y-%m') as pay_month,
+department_id,
+case when avg(amount) over(partition by department_id, pay_date) > avg(amount) over(partition by pay_date) then 'higher'
+     when avg(amount) over(partition by department_id, pay_date) < avg(amount) over(partition by pay_date) then 'lower'
+     else 'same' end as comparison
+from salary as s left join employee as e
+on s.employee_id = e.employee_id
+order by 1 desc, 2 asc
