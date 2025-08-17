@@ -1,0 +1,7 @@
+Select 
+max(case when continent='America' then name end) as America,
+max(case when continent='Asia' then name end) as Asia,
+max(case when continent='Europe' then name end) as Europe
+from (Select *, Row_number() over (partition by continent order by name) as row_id 
+from student) as t
+group by row_id

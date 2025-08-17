@@ -1,0 +1,23 @@
+With cte as (
+Select 'failed' as period_state, fail_date as event_date
+from Failed 
+where fail_date between '2019-01-01' and '2019-12-31'
+union
+Select 'succeeded' as period_state, success_date as event_date
+from Succeeded 
+where success_date between '2019-01-01' and '2019-12-31'
+), cte1 as (
+Select *, lag (period_state,1,period_state) over (order by event_date) as prev_state
+from cte
+) ,cte2 as (
+    Select *,
+    sum(
+        case
+        when period_state = prev_state then 0 else 1 
+        end
+        ) over (order by event_date) as flag
+    From cte1
+)
+Select period_state, min(event_date) as start_date, max(event_date) as end_date
+From cte2
+group by period_state, flag
