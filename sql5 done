@@ -1,0 +1,97 @@
+ Problem 1 : Report Contiguos Dates
+WITH all_dates AS (
+  SELECT fail_date AS dat, 'Failed' AS Period_status FROM Failed WHERE YEAR(fail_date) = 2019
+  UNION ALL
+  SELECT success_date AS dat, 'Succeeded' AS Period_status FROM Succeeded WHERE YEAR(success_date) = 2019
+),
+marked AS (
+  SELECT *,
+         LAG(dat) OVER (ORDER BY dat) AS prev_date,
+         LAG(Period_status) OVER (ORDER BY dat) AS prev_status
+  FROM all_dates
+),
+grouped_flagged AS (
+  SELECT *,
+         CASE 
+           WHEN prev_status = Period_status AND DATEDIFF(DAY, prev_date, dat) = 1
+           THEN 0
+           ELSE 1
+         END AS is_new_group
+  FROM marked
+),
+grouped AS (
+  SELECT *,
+         SUM(is_new_group) OVER (ORDER BY dat) AS grp_rnk
+  FROM grouped_flagged
+)
+SELECT 
+  Period_status,
+  MIN(dat) AS start_date,
+  MAX(dat) AS end_date
+FROM grouped
+GROUP BY grp_rnk, Period_status
+ORDER BY start_date;
+
+
+Problem 2 : Student Report By Geography
+
+WITH numbered AS (
+  SELECT
+    name,
+    continent,
+    ROW_NUMBER() OVER (
+      PARTITION BY continent
+      ORDER BY name
+    ) AS rn
+  FROM Student
+)
+SELECT
+  pvt.[America],
+  pvt.[Asia],
+  pvt.[Europe]
+FROM (
+  -- source data for pivot: each name, its continent, and its row‑number
+  SELECT name, continent, rn
+  FROM numbered
+) AS src
+PIVOT (
+  MAX(name)           -- aggregate to pick the student name at that (rn,continent)
+  FOR continent IN (
+    [America],
+    [Asia],
+    [Europe]
+  )
+) AS pvt
+ORDER BY rn;
+
+
+
+Problem 3 : Average Salary Department vs Company
+
+select department_salary.pay_month, department_salary.department_id,  case
+	WHEN department_salary.dept_avg  > company_salary.monthly_avg THEN 'higher'
+    WHEN department_salary.dept_avg  < company_salary.monthly_avg THEN 'lower'
+    ELSE 'same'
+  END AS comparison
+	from				
+(select department_id, format(pay_date, 'yyyy-MM') as pay_month, avg(amount) as dept_avg from salary s join Employees e on s.employee_id= e.employee_id
+group by department_id, format(pay_date, 'yyyy-MM'))as department_salary 
+join (
+select format(pay_date, 'yyyy-MM') as 'pay_month', avg(amount) as monthly_avg from Salary group by format(pay_date, 'yyyy-MM')) as company_salary 
+on department_salary.pay_month=company_salary.pay_month 
+order by department_id;
+
+
+Problem 4 : Game Play Analysis I
+WITH FirstLogin AS (
+    SELECT
+        player_id,
+        event_date,
+        ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY event_date ASC) AS rn
+    FROM Activity
+)
+SELECT
+    player_id,
+    event_date AS first_login
+FROM FirstLogin
+WHERE rn = 1;
