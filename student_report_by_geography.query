@@ -1,0 +1,11 @@
+# Write your MySQL query statement below
+with student_cte as 
+(
+  select name, continent, row_number() over (partition by continent order by name) as id 
+  from Student
+  )
+
+select America, Asia, Europe from (
+(select name as 'America', id from student_cte where continent='America') s1
+left join (select name as 'Asia', id from student_cte where continent='Asia') s2 on s1.id=s2.id
+left join (select name as 'Europe', id from student_cte where continent='Europe') s3 on s1.id=s3.id)

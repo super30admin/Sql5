@@ -1,0 +1,12 @@
+select distinct substring(pay_date, 1,7) as pay_month, p.department_id, (
+  case
+    when p.department_avg > p.overall_avg then 'higher'
+    when p.department_avg = p.overall_avg then 'same'
+    else 'lower'
+  end
+) as comparison
+from (
+select s.employee_id, e.department_id, s.amount, s.pay_date, avg(amount) over (partition by s.pay_date) as overall_avg, avg(s.amount) over (partition by e.department_id, s.pay_date) as department_avg
+from Salary s
+join Employee e on s.employee_id=e.employee_id) p
+order by pay_date desc
