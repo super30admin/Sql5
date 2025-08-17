@@ -1,0 +1,108 @@
+# Report Contiguos Dates_Solution_Solution_Q1
+
+WITH cte AS(
+(SELECT fail_date as date, 'failed' as state
+FROM failed)
+
+UNION ALL
+
+(SELECT success_date as date, 'succeeded' as state
+FROM succeeded)
+),
+cte2 AS(
+SELECT date, state, ROW_NUMBER() OVER(order by state, date) as seq
+FROM cte
+WHERE date between '2019-01-01' AND '2019-12-31'
+)
+
+SELECT state as period_state, min(date) as start_date, max(date) as end_date
+FROM cte2
+GROUP BY DATE_SUB(date, INTERVAL seq DAY), state
+ORDER BY start_date;
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Student Report By Geography_Solution_Q2
+
+# instead of RANK() we can also use ROW_NUMBER
+
+WITH cte AS
+(SELECT name AS 'America', RANK() OVER(ORDER BY name) AS 'rnk' 
+FROM student
+WHERE continent = 'America'
+),
+
+cte2 AS
+(SELECT name AS 'Asia', RANK() OVER(ORDER BY name) AS 'rnk' 
+FROM student
+WHERE continent = 'Asia'
+),
+
+cte3 AS
+(SELECT name AS 'Europe', RANK() OVER(ORDER BY name) AS 'rnk' 
+FROM student
+WHERE continent = 'Europe'
+)
+SELECT America, Asia, Europe
+FROM cte 
+LEFT JOIN cte2 ON cte.rnk = cte2.rnk
+LEFT JOIN cte3 ON cte2.rnk = cte3.rnk;
+
+# Alternative1
+
+SELECT America, Asia, Europe FROM(
+    (SELECT @am := 0, @as := 0, @eu :=0)t1,
+    (SELECT @as := @as+1 AS 'asrnk', name AS 'Asia' FROM student WHERE continent = 'Asia' ORDER BY name)t2 
+    RIGHT JOIN(SELECT @am := @am+1 AS 'amrnk', name AS 'America' FROM student WHERE continent = 'America' ORDER BY name)t3 ON asrnk = amrnk
+    LEFT JOIN(SELECT @eu := @eu+1 AS 'eurnk', name AS 'Europe' FROM student WHERE continent = 'Europe' ORDER BY name)t4 ON amrnk= eurnk
+);
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Average Salary Department vs Company_Solution_Q3
+
+SELECT departmentSalary.pay_month, department_id,(
+    CASE 
+    WHEN departmentavg > companyavg THEN 'higher'
+    WHEN departmentavg < companyavg THEN 'lower'
+    ELSE 'same'
+END
+)  AS 'comparison'
+FROM (SELECT date_format(pay_date, '%Y-%M') AS 'pay_month', department_id, AVG(amount) AS 'departmentavg' FROM Salary JOIN employee ON Salary.employee_id = employee.employee_id 
+GROUP BY department_id, pay_month
+) AS departmentSalary JOIN (
+SELECT date_format(pay_date, '%Y-%M') AS 'pay_month', AVG(month) AS 'companyavg' FROM Salary GROUP BY pay_month
+) AS companySalary ON departmentSalary.pay_month = companySalary.pay_month;
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Game Play Analysis I_Solution_Q4
+
+SELECT player_id,MIN(event_date) AS first_login
+FROM Activity
+GROUP BY player_id;
+
+# Alternative1
+
+SELECT DISTINCT player_id, MIN(event_date) OVER(PARTITION BY player_id) AS first_login
+FROM Activity;
+
+# Alternative2
+
+SELECT a.player_id, a.event_date AS 'first_login'
+FROM( SELECT b.player_id, b.event_date, RANK() OVER(PARTITION BY b.player_id ORDER BY event_date) AS 'rnk' FROM activity b
+) a
+WHERE a.rnk = 1;
+
+# Alternative3
+
+SELECT DISTINCT a.player_id, FIRST_VALUE(a.event_date) OVER(PARTITION BY a.player_id ORDER BY a.event_date) AS 'first_login' FROM activity a;
+
+# Alternative4
+
+SELECT DISTINCT a.player_id, LAST_VALUE(a.event_date) OVER(PARTITION BY a.player_id ORDER BY a.event_date DESC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS 'first_login' FROM activity a;
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
