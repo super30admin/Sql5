@@ -1,0 +1,15 @@
+SELECT
+    player_id,
+    MIN(event_date) AS first_login
+FROM (
+    SELECT
+        player_id,
+        event_date,
+        DENSE_RANK() OVER (PARTITION BY player_id ORDER BY event_date) AS rnk
+    FROM
+        Activity
+) AS RankedLogins
+WHERE
+    rnk = 1
+GROUP BY
+    player_id;
