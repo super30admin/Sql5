@@ -1,0 +1,18 @@
+# Write your MySQL query statement below
+with alldate as (
+select fail_date as dates, 'failed' as period_state, rank() over (order by fail_date) as local_rnk
+from Failed
+where fail_date between '2019-01-01' and '2019-12-31'
+union all
+select success_date as dates, 'succeeded' as period_state, rank() over (order by success_date) as local_rnk
+from Succeeded
+where success_date between '2019-01-01' and '2019-12-31'
+),
+groupDates as (
+select dates, period_state, local_rnk, rank() over (order by dates) as global_rnk
+from alldate
+)
+select period_state, min(dates) as start_date, max(dates) as end_date
+from groupDates
+group by global_rnk - local_rnk, period_state
+order by 2
