@@ -1,0 +1,126 @@
+day 5:
+
+
+prob 1: Report Contiguos Dates
+
+
+with cte as (select fail_date  as 'dat', "failed" as 'period_state' ,
+    rank() over(order by fail_date) as 'rnk'
+    from Failed
+    where year(fail_date) = 2019
+    union 
+    select success_date as 'dat', "succeeded" as 'period_state' ,
+     rank() over(order by success_date) as 'rnk'
+    from succeeded 
+    where year(success_date) = 2019
+)
+
+select period_state , min(dat) as 'start_date' , max(dat) as 'end_date' 
+from (select *, (rank() over (order by dat) - rnk) as 'group_rnk' from cte) as y
+group by group_rnk , period_state
+order by start_date
+
+
+
+
+
+
+prob 2: Student Report By Geography
+
+
+sol 1:
+
+with first as(select name as 'America', row_number() over(order by name)as 'rnk' from student where continent ='America'),
+second as(select name as 'Asia', row_number() over(order by name)as 'rnk' from student where continent ='Asia'),
+third as(select name as 'Europe', row_number() over(order by name)as 'rnk' from student where continent ='Europe')
+
+
+select America, Asia,Europe from second right join first on first.rnk =second.rnk
+left join third on first.rnk = third.rnk
+
+
+
+
+sol 2:
+
+select America ,Asia, Europe 
+from(
+    (select @am:=0,@as:=0,@eu:=0)t1,
+    (select @as:=@as+1 as 'asrnk', name as 'Asia' 
+        from student where continent ='Asia' order by name)t2 right join (
+            select @am:=@am+1 as 'amrnk', name as 'America' 
+            from student where continent ='America' order by name
+        ) t3 on asrnk = amrnk left join(
+            select @eu:=@eu+1 as 'eurnk', name as 'Europe' 
+            from student where continent ='Europe' order by name
+        ) t4 on amrnk =eurnk
+)
+
+
+
+
+
+
+
+prob 3: Average Salary Department vs Company
+
+
+SELECT DISTINCT pay_month, department_id, 
+(
+    CASE
+    WHEN dept_avg > company_avg THEN "higher"
+    WHEN dept_avg < company_avg THEN "lower"
+    WHEN dept_avg = company_avg THEN "same"
+    END
+) as comparison
+FROM 
+(
+    SELECT s.employee_id, amount, pay_Date, department_id, LEFT(s.pay_date, 7) as pay_month,
+     AVG(s.amount) OVER(PARTITION BY s.pay_date) as company_avg,
+     AVG(s.amount) OVER(PARTITION BY s.pay_Date, e.department_id) as dept_avg
+    FROM Salary s
+    JOIN Employee e ON s.employee_id = e.employee_id
+) as t;
+
+
+
+
+
+
+
+prob 4: Game Play Analysis I
+
+
+sol 1:
+
+select player_id,event_date as first_login 
+from Activity 
+group by player_id
+order by event_date asc
+
+
+sol 2:
+
+select player_id, min(event_date) as first_login
+from Activity 
+group by player_id
+
+
+sol 3:
+
+select distinct player_id, min(event_date) over (partition by player_id) as first_login
+from Activity 
+
+sol 4:
+
+select distinct a.player_id, first_value(a.event_date) over (partition by a.player_id order by a.event_date) as first_login
+from Activity a
+
+
+sol 5:
+
+select distinct a.player_id, last_value(a.event_date) over (partition by a.player_id order by a.event_date desc 
+range between unbounded preceding and unbounded following) as first_login
+from Activity a
+
+
